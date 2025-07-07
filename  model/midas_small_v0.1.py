@@ -5,35 +5,35 @@ import hls4ml
 
 #------------------------------------------------------------------------------------------------------------------
 #倒置残差
-def InvertedResidual(input_tensor,expansion,output_channels,stride,kernel_size = 3):
+def InvertedResidual(input_tensor,expansion,output_channels,stride,kernel_size = 3,name_prefix = 'inv_res'):
     inter_channel = input_tensor.shape[-1] * expansion
     #扩张通道
-    x = layers.Conv2D(filters=inter_channel,kernel_size=1,use_bias=False)(input_tensor)
-    x = layers.BatchNormalization()(x)
-    x = layers.ReLU(max_value=6)(x)
+    x = layers.Conv2D(filters=inter_channel,kernel_size=1,use_bias=False,name=f"{name_prefix}_expand_conv")(input_tensor)
+    x = layers.BatchNormalization(name=f"{name_prefix}_expand_bn")(x)
+    x = layers.ReLU(max_value=6,name=f"{name_prefix}_expand_relu")(x)
     #深度卷积
-    x = layers.DepthwiseConv2D(kernel_size=kernel_size,strides=stride,padding='same',use_bias=False)(x)
-    x = layers.BatchNormalization()(x)
-    x = layers.ReLU(max_value=6)(x)
+    x = layers.DepthwiseConv2D(kernel_size=kernel_size,strides=stride,padding='same',use_bias=False,name=f"{name_prefix}_dw_conv")(x)
+    x = layers.BatchNormalization(name=f"{name_prefix}_dw_bn")(x)
+    x = layers.ReLU(max_value=6,name=f"{name_prefix}_dw_relu")(x)
     #修改通道数为output_channels
-    x = layers.Conv2D(filters = output_channels,kernel_size=1,use_bias=False)(x)
-    x = layers.BatchNormalization()(x)
+    x = layers.Conv2D(filters = output_channels,kernel_size=1,use_bias=False,name=f"{name_prefix}_project_conv")(x)
+    x = layers.BatchNormalization(name=f"{name_prefix}_project_bn")(x)
     #若可行 则残差连接
     if input_tensor.shape[-1] == output_channels and stride == 1:
-        x = layers.Add()([input_tensor,x])
+        x = layers.Add(name=f"{name_prefix}_add")([input_tensor,x])
     return x
 #------------------------------------------------------------------------------------------------------------------
 
 
 #------------------------------------------------------------------------------------------------------------------
 #深度 可分离 卷积
-def DepthwiseSeparableConv(input_tensor,output_channels,kernel_size,stride):
+def DepthwiseSeparableConv(input_tensor,output_channels,kernel_size,stride,name_prefix = 'dws_conv'):
     x = layers.DepthwiseConv2D(kernel_size=(kernel_size,kernel_size),strides=stride,padding='same',use_bias=False,
-                               name = f"{input_tensor.name.split('/')[0]}_dwconv")(input_tensor)
-    x = layers.BatchNormalization(name = f"{x.name.split('/')[0]}_bn1")(x)
-    x = layers.ReLU(max_value=6,name=f"{x.name.split('/')[0]}_relu1")(x)
-    x = layers.Conv2D(filters=output_channels,kernel_size=(1,1),strides=1,padding='same',use_bias=False,name=f"{x.name.split('/')[0]}_pwconv")(x)
-    x = layers.BatchNormalization(name=f"{x.name.split('/')[0]}_bn2")(x)
+                               name = f"{name_prefix}_dwconv")(input_tensor)
+    x = layers.BatchNormalization(name = f"{name_prefix}_bn1")(x)
+    x = layers.ReLU(max_value=6,name=f"{name_prefix}_relu1")(x)
+    x = layers.Conv2D(filters=output_channels,kernel_size=(1,1),strides=1,padding='same',use_bias=False,name=f"{name_prefix}_pwconv")(x)
+    x = layers.BatchNormalization(name=f"{name_prefix}_bn2")(x)
     #逐点卷积后没有激活函数
     return x
 #------------------------------------------------------------------------------------------------------------------
@@ -47,17 +47,13 @@ def Layer1(input_tensor):
 
     print("\nlayer1  stage 0 finished\n")
     
-    x = DepthwiseSeparableConv(x,32,3,1)
-    x = layers.BatchNormalization(name='layer1_stage1_bn_1')(x)
-    x = layers.ReLU(max_value=6,name='layer1_stage1_relu_1')(x)
-    x = layers.Conv2D(filters=24,kernel_size=1,strides=1,use_bias=False,name='layer1_stage1_conv_1')(x)
-    x = layers.BatchNormalization(name='layer1_stage1_bn_2')(x)
+    x = DepthwiseSeparableConv(x,output_channels=32,kernel_size=3,stride=1,name_prefix='layer1_stage1_dws_0')
 
     print("\nlayer1 stage1 finished\n")
 
-    x = InvertedResidual(x,output_channels=32,expansion=6,kernel_size=3,stride=2)
-    x = InvertedResidual(x,output_channels=32,expansion=6,kernel_size=3,stride=1)
-    x = InvertedResidual(x,output_channels=32,expansion=6,kernel_size=3,stride=1)
+    x = InvertedResidual(x,output_channels=32,expansion=6,kernel_size=3,stride=2,name_prefix='layer1_stage2_ir_0')
+    x = InvertedResidual(x,output_channels=32,expansion=6,kernel_size=3,stride=1,name_prefix='layer1_stage2_ir_1')
+    x = InvertedResidual(x,output_channels=32,expansion=6,kernel_size=3,stride=1,name_prefix='layer1_stage2_ir_2')
 
     print("\nlayer1 stage2 finished\n")
 
