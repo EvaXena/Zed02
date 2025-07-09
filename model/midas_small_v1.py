@@ -137,7 +137,7 @@ def Layer4(x):
 
 #------------------------------------------------------------------------------------------------------------------
 #解码器
-def scratch():
+def Midas_small():
 
     input_shape = (256,256,3)
     model_input = keras.Input(shape=input_shape)
@@ -177,7 +177,7 @@ def scratch():
 # ==============================================================================
 if __name__ == '__main__':
     # 设定一个符合预期的输入形状
-    model = scratch()
+    model = Midas_small()
 
     model.summary(line_length=150)
 
