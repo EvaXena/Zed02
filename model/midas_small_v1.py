@@ -164,6 +164,7 @@ def Midas_small():
     x = layers.UpSampling2D(size=(2,2),interpolation='nearest',name=f"scratch_stageoutput_upsample_0")(x)
     x = layers.Conv2D(filters=32,kernel_size=3,strides=1,padding='same',name='scratch_stageoutput_conv_1')(x)
     x = layers.ReLU(name='scratch_stageoutput_relu_0')(x)
+    x = layers.UpSampling2D(size=(2,2),interpolation='nearest',name=f"scratch_stageoutput_upsample_1")(x)
     x = layers.Conv2D(filters=1,kernel_size=1,strides=1,padding='same',name='scratch_stageoutput_conv_2')(x)
     x = layers.ReLU(name='scratch_stageoutput_relu_1')(x)
 
