@@ -7,3 +7,5 @@ Total params: 12035041 (45.91 MB)
 Trainable params: 11960929 (45.63 MB)
 Non-trainable params: 74112 (289.50 KB)
 =======================================
+
+添加environment.yaml 保证环境稳定 在宿主机装有CUDA时 记得unset LD_LIBRARY_PATH
