@@ -63,9 +63,12 @@ dataloader 中bv11 v12分别匹配 run的 v11 v12
 0710 v2
 完成剪枝
 
-新增功能代码:prune_midas_v1 经过包装与编译的 可剪枝新模型
+新增功能代码:
+            prune_midas_v1 经过包装与编译的 可剪枝新模型
 
-           run_prune_midas_v1 用于在服务器上训练的 剪枝训练模型
+            run_prune_midas_v1 用于在服务器上训练的 剪枝训练模型
 
-核心功能代码：callbacks 继承了多种callback，已经实现callback_prune 极大优化训练流程
+核心功能代码：
+
+            callbacks 继承了多种callback，已经实现callback_prune 极大优化训练流程
 ******************************************************
