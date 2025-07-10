@@ -88,10 +88,7 @@ if __name__ == '__main__':
         train_generator,
         epochs=EPOCHS,
         validation_data=val_generator,
-        callbacks=[checkpoint_callback, tensorboard_callback],
-        workers=32,
-        use_multiprocessing=True,
-        max_queue_size=20
+        callbacks=[checkpoint_callback, tensorboard_callback]
     )
 
     # --- 第八步：分析实验结果 ---

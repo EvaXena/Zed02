@@ -1,0 +1,25 @@
+from predict.predictor import Predictor
+import os
+
+if __name__ == '__main__':
+    model_file = 'result/midas_small_best_v2.h5'
+    input_dir = 'input/'
+    output_dir = 'output/'
+
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+        
+    predictor = Predictor(model_path=model_file)
+
+    test_images = [f for f in os.listdir(input_dir) if f.endswith(('.png','.jpg','.jpeg'))]
+
+    if not test_images:
+        print("no images found")
+    for image_name in test_images:
+        input_path = os.path.join(input_dir,image_name)
+        output_name = os.path.splitext(image_name)[0] + '_depth.png'
+        output_path = os.path.join(output_dir,output_name)
+
+        predictor.predict(input_path,output_path)
+
+    print ("All finished")

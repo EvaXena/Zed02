@@ -1,4 +1,6 @@
-References/
-dataset/
-result/
-logs/
+References/*
+dataset/*
+result/*
+logs/*
+input/*
+output/*
