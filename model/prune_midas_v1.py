@@ -14,10 +14,11 @@ def Midas_prune():
 
     # 定义稀疏化参数
     pruning_params = {
-        "pruning_schedule": pruning_schedule.ConstantSparsity(
-            0.3,  # 30% 稀疏化
-            begin_step=20000,  # 从第20000步开始稀疏化
-            frequency=1000  # 每1000步更新一次稀疏化
+        "pruning_schedule": pruning_schedule.PolynomialDecay(
+            initial_sparsity=0.0,
+            final_sparsity=0.5, # 我们可以从一个更保守的50%稀疏度开始
+            begin_step=100,     # 在第100步（大约第5个epoch）开始剪枝
+            end_step=4000       # 在第4000步（大约第100个epoch）达到目标稀疏度
         )
     }
 

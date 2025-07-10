@@ -1,90 +1,85 @@
+# comparator.py (The Perfected Version by Kurisu Makise)
+
 import tensorflow as tf
-import numpy as np
 from tensorflow.keras.models import load_model
+import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 from matplotlib.legend import Legend
 import os
 
+# 教程里的plotting.py不是为回归任务设计的，我们这里不再需要它
+
 class Comparator:
-    def __init__(self,baseline_model_path,compared_model_path):
-        """
-        初始化比较器，加载基准模型和被比较模型。
-        """
+    def __init__(self, baseline_model_path: str, compressed_model_path: str):
         print("--- Initializing Model Comparator ---")
-        self.baseline_model = self._load_model(baseline_model_path,"Baseline")
-        self.compared_model = self._load_model(compared_model_path,"Compared")
-        print("--- Models loaded successfully ---")
-
+        self.baseline_model = self._load_model(baseline_model_path, "Baseline")
+        self.compressed_model = self._load_model(compressed_model_path, "Compressed")
+        
         self.baseline_metrics = {}
-        self.compared_metrics = {}
-
-        print("--------------------------------------\n")
-
-    def _load_model(self,model_path,model_name):
+        self.compressed_metrics = {}
+        print("--- Models loaded successfully ---\n")
+        
+    def _load_model(self, model_path: str, model_name: str) -> tf.keras.Model:
         print(f"Loading {model_name} model from: {model_path}")
         if not os.path.exists(model_path):
             raise FileNotFoundError(f"{model_name} model not found at: {model_path}")
         return load_model(model_path)
-    
-    def _count_non_zero_weights(self,model):
-        non_zero = 0
-        total = 0
+
+    def _count_non_zero_weights(self, model: tf.keras.Model) -> tuple[int, int]:
+        non_zero, total = 0, 0
         for layer in model.layers:
             if isinstance(layer, (tf.keras.layers.Dense, tf.keras.layers.Conv2D)):
-                weights = layer.get_weights()
-                for w in weights:
+                for w in layer.get_weights():
                     non_zero += tf.math.count_nonzero(w).numpy()
                     total += tf.size(w).numpy()
         return non_zero, total
     
-    def _get_flops(self,model):
+    def _get_flops(self, model: tf.keras.Model) -> int:
         try:
             input_shape = [1] + model.input_shape[1:]
-            inputs = [tf.TensorSpec(input_shape, model.inputs[0].dtype)]
-            
-            forward_pass = tf.function(model.call, input_signature=inputs)
+            inputs = [tf.TensorSpec(input_shape, model.inputs[0].dtype)]#生成input
+            forward_pass = tf.function(model.call, input_signature=inputs)#生成静态图
+            # 修正：使用tf.compat.v1.profiler.profile来获取FLOPs
             graph_info = tf.compat.v1.profiler.profile(
                 graph=forward_pass.get_concrete_function().graph,
-                options=tf.compat.v1.profiler.ProfileOptionBuilder.float_operation()
-            )
+                options=tf.compat.v1.profiler.ProfileOptionBuilder.float_operation())
             return graph_info.total_float_ops // 2
+        #使用静态图可能出错
         except Exception:
-            # 在某些复杂模型或TF版本上，profiler可能会失败
             return -1
         
     def compare_model_size(self):
         print("--- Round 1: Model Size (Parameter Count) ---")
-
+        
+        # 修正点一：必须同时计算并显示基准模型的参数！
         baseline_total_params = self.baseline_model.count_params()
         self.baseline_metrics['total_params'] = baseline_total_params
+        print(f"Baseline Model Total Parameters:   {baseline_total_params:,}")
 
-        non_zero,total = self._count_non_zero_weights(self.compared_model)
-
-        self.compared_metrics['total_params'] = total
-        self.compared_metrics['non_zero_params'] = non_zero
-
+        # 计算压缩模型
+        non_zero, total = self._count_non_zero_weights(self.compressed_model)
+        self.compressed_metrics['total_params'] = total
+        self.compressed_metrics['non_zero_params'] = non_zero
         sparsity = 1.0 - (non_zero / total) if total > 0 else 0
-
-        self.compared_metrics['sparsity'] = sparsity
-
-        print(f"Compared Model Total Parameters:   {total:,}")
-        print(f"Compared Model Non-Zero Parameters: {non_zero:,}")
-        print(f"Achieved Sparsity: {sparsity:.2%}")
+        self.compressed_metrics['sparsity'] = sparsity
+        
+        print(f"Compressed Model Total Parameters: {total:,}")
+        print(f"Compressed Model Non-Zero Params:  {non_zero:,}")
+        print(f"Achieved Sparsity:                 {sparsity:.2%}")
         print("--------------------------------------------\n")
         return self
 
     def compare_flops(self):
-        """对比并打印模型的理论计算量。"""
         print("--- Round 2: Computational Cost (FLOPs) ---")
-        
+        # ... (这部分你的代码是正确的，无需修改) ...
         flops_baseline = self._get_flops(self.baseline_model)
         self.baseline_metrics['flops'] = flops_baseline
         if flops_baseline != -1:
             print(f"Baseline Model FLOPs (approx.): {flops_baseline / 1e6:.2f} M-FLOPs")
         else:
             print("Could not profile Baseline Model FLOPs.")
-            
+        
         flops_compressed = self._get_flops(self.compressed_model)
         if flops_compressed != -1:
             sparsity = self.compressed_metrics.get('sparsity', 0)
@@ -93,80 +88,70 @@ class Comparator:
             print(f"Compressed Model FLOPs (theoretical): {theoretical_flops / 1e6:.2f} M-FLOPs")
         else:
             print("Could not profile Compressed Model FLOPs.")
-            
+        
         print("Note: True benefit is in reduced DSP usage during HLS synthesis.")
         print("--------------------------------------------\n")
         return self
     
-    def compare_accuracy(self, X_test: np.ndarray, y_test: np.ndarray, classes: list, batch_size: int = 1024):
-        """
-        对比并打印模型的预测精度，并绘制ROC曲线。
+    def compare_regression_performance(self, test_dataset: tf.data.Dataset, batch_size: int = None):
+
+        print("--- Round 3: Predictive Performance (Regression) ---")
         
-        参数:
-            X_test, y_test: 测试数据集。
-            classes (list): 类别名称列表，用于图例。
-            batch_size (int): 预测时使用的批次大小。
-        """
-        print("--- Round 3: Predictive Accuracy ---")
+        print("Evaluating baseline model...")
+        results_baseline = self.baseline_model.evaluate(test_dataset, verbose=0, return_dict=True)
         
-        print("Generating predictions...")
-        y_baseline = self.baseline_model.predict(X_test, batch_size=batch_size)
-        y_compressed = self.compressed_model.predict(X_test, batch_size=batch_size)
+        print("Evaluating compressed model...")
+        results_compressed = self.compressed_model.evaluate(test_dataset, verbose=0, return_dict=True)
         
-        acc_baseline = np.mean(tf.keras.metrics.categorical_accuracy(y_test, y_baseline))
-        acc_compressed = np.mean(tf.keras.metrics.categorical_accuracy(y_test, y_compressed))
-        self.baseline_metrics['accuracy'] = acc_baseline
-        self.compressed_metrics['accuracy'] = acc_compressed
+        self.baseline_metrics.update(results_baseline)
+        self.compressed_metrics.update(results_compressed)
         
-        accuracy_drop = acc_baseline - acc_compressed
+        print(f"\n{'Metric':<25} | {'Baseline Model':<20} | {'Compressed Model':<20}")
+        print("-" * 70)
+        # 使用.get()方法，以防某个模型没有编译某个metric
+        print(f"{'Loss (MSE)':<25} | {results_baseline.get('loss', 'N/A'):<20.4f} | {results_compressed.get('loss', 'N/A'):<20.4f}")
+        print(f"{'Mean Absolute Error':<25} | {results_baseline.get('mean_absolute_error', 'N/A'):<20.4f} | {results_compressed.get('mean_absolute_error', 'N/A'):<20.4f}")
         
-        print(f"Baseline Model Accuracy: {acc_baseline:.4f}")
-        print(f"Compressed Model Accuracy:   {acc_compressed:.4f}")
-        print(f"Accuracy Drop:   {accuracy_drop:.4f} (Drop of {(accuracy_drop/acc_baseline):.2%})")
-        
-        print("\nPlotting ROC curves for detailed comparison...")
-        fig, ax = plt.subplots(figsize=(9, 9))
-        plotting.makeRoc(y_test, y_baseline, classes, linestyle='-')
-        plt.gca().set_prop_cycle(None)
-        plotting.makeRoc(y_test, y_compressed, classes, linestyle='--')
-        
-        lines = [Line2D([0], [0], ls='-'), Line2D([0], [0], ls='--')]
-        leg = Legend(ax, lines, labels=['Baseline Model', 'Compressed Model'], loc='lower right', frameon=False)
-        ax.add_artist(leg)
-        
-        plt.savefig('comparison_report.png')
-        print("Comparison ROC curve saved to 'comparison_report.png'")
-        plt.show()
-        print("--------------------------------------------\n")
+        print("\nNote: Lower values are better for both metrics.")
+        print("------------------------------------------------------\n")
         return self
         
     def generate_summary_report(self):
-        """打印一份最终的总结报告。"""
+        """修正点三：现在可以正确报告所有指标的最终总结报告。"""
         print("========== FINAL COMPARISON REPORT ==========")
         print(f"{'Metric':<25} | {'Baseline Model':<20} | {'Compressed Model':<20}")
         print("-" * 70)
         
-        # 打印参数
+        # 参数对比
         total_b = self.baseline_metrics.get('total_params', 'N/A')
         total_c = self.compressed_metrics.get('total_params', 'N/A')
         non_zero_c = self.compressed_metrics.get('non_zero_params', 'N/A')
-        sparsity_c = self.compressed_metrics.get('sparsity', 0)
+        
+        # --- 关键修正！解除嵌套！ ---
+        # 1. 先把内层的计算，赋值给一个变量
+        sparsity_val = self.compressed_metrics.get("sparsity", 0)
+        sparsity_str = f"{sparsity_val:.2%}" 
         
         print(f"{'Total Parameters':<25} | {total_b:,<20} | {total_c:,<20}")
         if 'non_zero_params' in self.compressed_metrics:
             print(f"{'Non-Zero Parameters':<25} | {'N/A':<20} | {non_zero_c:,<20}")
-            print(f"{'Sparsity':<25} | {'0.00%':<20} | {f'{sparsity_c:.2%}':<20}")
+            # 2. 然后，把这个已经计算好的字符串变量，放进外层的f-string里
+            print(f"{'Sparsity':<25} | {'0.00%':<20} | {sparsity_str:<20}")
+        # --- 修正结束 ---
 
-        # 打印FLOPs
+        # FLOPs对比
         flops_b = self.baseline_metrics.get('flops', -1)
         flops_c = self.compressed_metrics.get('flops_theoretical', -1)
-        
-        print(f"{'FLOPs (M)':<25} | {f'{flops_b/1e6:.2f} M' if flops_b!=-1 else 'N/A':<20} | {f'{flops_c/1e6:.2f} M (theory)' if flops_c!=-1 else 'N/A':<20}")
+        print(f"{'FLOPs (M-theory)':<25} | {f'{flops_b/1e6:.2f} M' if flops_b!=-1 else 'N/A':<20} | {f'{flops_c/1e6:.2f} M' if flops_c!=-1 else 'N/A':<20}")
 
-        # 打印精度
-        acc_b = self.baseline_metrics.get('accuracy', -1)
-        acc_c = self.compressed_metrics.get('accuracy', -1)
-        
-        print(f"{'Accuracy':<25} | {f'{acc_b:.4f}':<20} | {f'{acc_c:.4f}':<20}")
+        # 性能指标对比
+        loss_b = self.baseline_metrics.get('loss', 'N/A')
+        loss_c = self.compressed_metrics.get('loss', 'N/A')
+        mae_b = self.baseline_metrics.get('mean_absolute_error', 'N/A')
+        mae_c = self.compressed_metrics.get('mean_absolute_error', 'N/A')
+
+        # 修正！你之前打印的是accuracy，但metrics里存的是mae和loss
+        print(f"{'Loss (MSE)':<25} | {loss_b:<20.4f} | {loss_c:<20.4f}")
+        print(f"{'Mean Absolute Error':<25} | {mae_b:<20.4f} | {mae_c:<20.4f}")
         
         print("===========================================")
