@@ -2,7 +2,7 @@ from predict.predictor import Predictor
 import os
 
 if __name__ == '__main__':
-    model_file = 'result/midas_small_best_v2.h5'
+    model_file = 'result/final_pruned_model_v1.h5'  # 确保这个路径和你的模型文件名一致
     input_dir = 'input/'
     output_dir = 'output/'
 
