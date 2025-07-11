@@ -28,6 +28,8 @@ def preprocess(image, depth):
 
 if __name__ == '__main__':
     # 不需要 mp.set_start_method 了
+
+    model_name = "midas_prune_v2"
     
     print("Stage 1: Loading dataset paths...")
     with h5py.File('dataset/nyu_depth_v2_labeled.mat', 'r') as f:
@@ -85,9 +87,13 @@ if __name__ == '__main__':
         validation_data=val_dataset,
         callbacks=pruning_callbacks
     )
-    
-    final_pruned_model = strip_pruning(model)
-    final_pruned_model.save(os.path.join('result','final_pruned_model.h5'))
+    #将保存的权重加载进来并且去外骨骼最后保存
+    model_for_export = Midas_prune()
+
+    model_for_export.load_weights(os.path.join('result', f"{model_name}_best_weights.h5"))
+
+    final_pruned_model = strip_pruning(model_for_export)
+    final_pruned_model.save(os.path.join('result',f"{model_name}.h5"))
 
 
     # --- 第八步：分析实验结果 ---

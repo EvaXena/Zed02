@@ -16,6 +16,15 @@ class Comparator:
         self.baseline_model = self._load_model(baseline_model_path, "Baseline")
         self.compressed_model = self._load_model(compressed_model_path, "Compressed")
         
+        #给去掉外骨骼的模型重新编译
+        if not self.compressed_model.optimizer:
+            print("Compiling compressed model...")
+            self.compressed_model.compile(
+                optimizer=tf.keras.optimizers.Adam(learning_rate=1e-4),
+                loss='mean_squared_error',
+                metrics=['mean_absolute_error']
+            )
+
         self.baseline_metrics = {}
         self.compressed_metrics = {}
         print("--- Models loaded successfully ---\n")

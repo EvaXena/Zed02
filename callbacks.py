@@ -5,11 +5,12 @@ import tensorflow_model_optimization as tfmot
 
 logs = 'logs'  # 日志目录
 
-def callbacks_pruning(log_dir=logs,stop_patience = 20,lr_patience = 5,lr_factor = 0.5):
+def callbacks_pruning(log_dir=logs,stop_patience = 200,lr_patience = 5,lr_factor = 0.5):
     #stop_patience: 停止训练的耐心值
     #lr_patience: 学习率调整的耐心值
     #lr_factor: 学习率调整的因子
     #返回一个包含所有回调函数的列表
+    model_name = "midas_prune_v2"
 
     if not os.path.exists(log_dir):
         os.makedirs(log_dir,exist_ok=True)
@@ -19,10 +20,13 @@ def callbacks_pruning(log_dir=logs,stop_patience = 20,lr_patience = 5,lr_factor 
     pruning_callback = tfmot.sparsity.keras.UpdatePruningStep()
 
     #2.最佳模型存档模块
+    #注意保存的模型带有外骨骼
+    #如果需要保存去除外骨骼的模型，请在训练结束后使用
+    #strip_pruning(model)函数
     checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
-        filepath=os.path.join(log_dir, 'midas_prune_best_v1.h5'), # 保存文件的路径
+        filepath=os.path.join('result', f"{model_name}_best_weights.h5"), # 保存文件的路径
         save_best_only=True,             # 只保存最好的，不保存最后的
-        save_weights_only=False,  # 保存整个模型而不是仅仅权重
+        save_weights_only=True,  # 只保存权重
         monitor='val_loss',              # 监控验证集的损失值
         mode='min',                      # 我们希望损失值越小越好
         verbose=1                        # 在保存时打印提示信息
@@ -56,10 +60,10 @@ def callbacks_pruning(log_dir=logs,stop_patience = 20,lr_patience = 5,lr_factor 
     #6.数据可视化模块
     tensorboard_callback = tf.keras.callbacks.TensorBoard(
         log_dir=log_dir,  # 日志目录
-        histogram_freq=1,  # 每隔多少个epoch计算直方图
-        write_graph=True,  # 是否写入图结构
-        write_images=True,  # 是否写入模型权重的图像
-        update_freq='epoch'  # 更新频率
+        histogram_freq=0,  # 每隔多少个epoch计算直方图
+        write_graph=False,  # 是否写入图结构
+        write_images=False,  # 是否写入模型权重的图像
+        update_freq=50  # 更新频率
     )
 
     callback_list = [

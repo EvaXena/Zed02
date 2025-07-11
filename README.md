@@ -72,3 +72,15 @@ dataloader 中bv11 v12分别匹配 run的 v11 v12
 
             callbacks 继承了多种callback，已经实现callback_prune 极大优化训练流程
 ******************************************************
+0711 v1
+========== FINAL COMPARISON REPORT ==========
+Metric                    | Baseline Model       | Compressed Model    
+----------------------------------------------------------------------
+Total Parameters          | 12035041,,,,,,,,,,,, | 11536321,,,,,,,,,,,,
+Non-Zero Parameters       | N/A                  | 9937327,,,,,,,,,,,,,
+Sparsity                  | 0.00%                | 13.86%              
+FLOPs (M-theory)          | N/A                  | N/A                 
+Loss (MSE)                | 0.0122               | 0.0496              
+Mean Absolute Error       | 0.0805               | 0.1676              
+===========================================
+完成对比 完成剪枝 下一步进行对剪枝后模型的hlsconfig

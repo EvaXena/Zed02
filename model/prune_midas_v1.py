@@ -1,7 +1,9 @@
 #剪枝后的模型内部包含编译，不再run内编译
+#剪枝模型应该不应该续训而是从头开始训练
 import tensorflow as tf
 from tensorflow.keras.models import load_model
 from tensorflow_model_optimization.python.core.sparsity.keras import prune,pruning_callbacks,pruning_schedule
+from model.midas_small_v2 import Midas_small
 
 def Midas_prune():
     """
@@ -10,7 +12,7 @@ def Midas_prune():
     # 加载预训练的Midas模型
     print("Loading baseline model...")
 
-    baseline_model = load_model('result/midas_small_best_v2.h5')
+    baseline_model = Midas_small()
 
     # 定义稀疏化参数
     pruning_params = {
