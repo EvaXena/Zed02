@@ -1,7 +1,108 @@
-hey 本库基于hls4ml开发 旨在fpga上部署midas_small与sml 实现水下场景的使用
+# hey 本库基于hls4ml开发 旨在fpga上部署midas_small与sml 实现水下场景的使用
 ******************************************************
-0707 v1
-model文件夹中是 模型原型 
+# 介绍
+## 模型组件
+- **model**        包含模型定义
+    - *midas_small_v2.py* midas模型 全部使用hls4ml适配函数编写
+    - *prune_midas_v1.py* 以midasv2为基础 带有剪枝包装与优化器
+    - （midas_small_v1 输出层带有relu会突然死亡 不再使用）
+- **dataloader**
+    - *load_nyu_v12*从硬盘中分步读取.mat文件中的内容 用于在个人终端训练
+- **dataset**
+    - 存放数据集(.mat)格式
+- **model_pic**
+    - 存放模型训练loss mae损失曲线
+- **result**
+    - 存放训练完成的不同版本模型
+- **save_model**
+    - 效果同result 用于 compare
+- **训练**
+    - *run_midas_v12.py* 在个人终端的baseline模型训练 需要配合dataloader
+    - *run_midas_v14.py* 在服务器端的baseline模型训练 速度是个人终端的30倍
+    - *run_prune_v2* 在服务器端的剪枝模型训练 使用了callbacks_v2 优化训练保存流程
+
+
+
+## **inference**
+- **input**
+    - 内部放任意分辨率 .jpg .png .jpeg  用于inference 
+- **output**
+    - 输出input内图片的深度图
+- **predict**
+    - predictor.py 定义Class Predictor 用于inference
+- *run_inference_v1* 调用训练好的网络输出深度预测结果
+
+## **comparsion**
+- *comparator.py*  定义Class Comparator 用于compare
+- *run_comparsion_v1* 对比基线模型与优化后模型的 参数量 稀疏度 loss mse
+
+
+### *callbacks* 
+- 用于定义训练callback 
+- v2实现Callbacks类 优化剪枝模型训练保存流程
+
+### *environment*
+- *environment2.yaml* 保存至 0712 v1版本为止的 所有依赖
+
+### *test*
+- *test1.py* 读.mat文件 往input里存jpg
+- *test2.py* 往input文件夹保存数据集文件.npy用于测试
+- *test6.py* 逐层输出模型每层的输出
+
+
+
+# 运行结果
+## 剪枝
+![剪枝模型与baseline模型参数对比](images/prune.png)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# 开发日志
+## 0707 v1
+*model*文件夹中是 模型原型 
+
 现已完成 Midas_samll 的 tensorflow复现
 ******************************************************
 Total params: 12035041 (45.91 MB)
@@ -73,14 +174,14 @@ dataloader 中bv11 v12分别匹配 run的 v11 v12
             callbacks 继承了多种callback，已经实现callback_prune 极大优化训练流程
 ******************************************************
 0711 v1
-========== FINAL COMPARISON REPORT ==========
-Metric                    | Baseline Model       | Compressed Model    
+
 ----------------------------------------------------------------------
-Total Parameters          | 12035041,,,,,,,,,,,, | 11536321,,,,,,,,,,,,
-Non-Zero Parameters       | N/A                  | 9937327,,,,,,,,,,,,,
-Sparsity                  | 0.00%                | 13.86%              
-FLOPs (M-theory)          | N/A                  | N/A                 
-Loss (MSE)                | 0.0122               | 0.0496              
-Mean Absolute Error       | 0.0805               | 0.1676              
+           
 ===========================================
 完成对比 完成剪枝 下一步进行对剪枝后模型的hlsconfig
+
+### 0712 v1 
+- #### 修改readme.md 整理工程结构
+
+
+

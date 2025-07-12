@@ -19,8 +19,8 @@ def Midas_prune():
         "pruning_schedule": pruning_schedule.PolynomialDecay(
             initial_sparsity=0.0,
             final_sparsity=0.5, # 我们可以从一个更保守的50%稀疏度开始
-            begin_step=100,     # 在第100步（大约第5个epoch）开始剪枝
-            end_step=4000       # 在第4000步（大约第100个epoch）达到目标稀疏度
+            begin_step=1000,     # 在第1000步（大约第50个epoch）开始剪枝
+            end_step=6000       # 在第6000步（大约第300个epoch）达到目标稀疏度
         )
     }
 

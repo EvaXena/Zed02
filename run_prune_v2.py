@@ -1,22 +1,16 @@
-#训练剪枝后的模型
-
-#服务器优化版
-#使用tensorflow 的c++框架
-#自适应cpu gpu
-
+#调用callbacks_v2.py中的回调函数 更加优化训练
 import os
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2' # 先把烦人的日志关掉
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 import h5py
 import numpy as np
 import tensorflow as tf
 from sklearn.model_selection import train_test_split
-from model.prune_midas_v1 import Midas_prune
+# 关键！我们现在需要把那个模型创建函数，直接传给回调函数！
+from model.prune_midas_v1 import Midas_prune 
 from tensorflow_model_optimization.sparsity.keras import strip_pruning
 import matplotlib.pyplot as plt
 
-from callbacks import callbacks_pruning
-
-# ... (你的模型定义等) ...
+from callbacks_v2 import all_callbacks
 
 def preprocess(image, depth):
     # 这个函数将在tf.data管道中被高效执行
@@ -29,7 +23,7 @@ def preprocess(image, depth):
 if __name__ == '__main__':
     # 不需要 mp.set_start_method 了
 
-    model_name = "midas_prune_v4"
+    model_name = "midas_prune_v6"
     
     print("Stage 1: Loading dataset paths...")
     with h5py.File('dataset/nyu_depth_v2_labeled.mat', 'r') as f:
@@ -63,41 +57,30 @@ if __name__ == '__main__':
 
     # --- 后续的模型创建、编译、训练代码 ---
     print("stage 2: Model setup")
+    # 我们先创建一个模型实例，用于训练
+    model_to_train = Midas_prune()
 
-    #模型已经在model/prune_midas_v1.py中编译
-    #如果需要重新编译，请在这里取消注释
-    model = Midas_prune()
-
-    print("stage 4")
-    pruning_callbacks = callbacks_pruning(
-        log_dir='logs'
+    pruning_callbacks = all_callbacks(
+        output_dir='result',
+        model_name=model_name,
+        pruning_model_fn=Midas_prune,  # 传入模型创建函数
+        save_period=50,  # 每5个epoch保存一次
+        stop_patience=200,  # 停止训练的耐心值
+        lr_patience=20,  # 学习率调整的耐心值
+        lr_factor=0.5  # 学习率调整的因子
     )
 
-    print("stage 4 finished")
-
     print("start train")
-    EPOCHS = 200
+    EPOCHS = 500
 
-
-    # ... 你的后续代码 ...
-    # 这里的 model.fit 将会畅通无阻，并且速度飞快
-    history = model.fit(
+    history = model_to_train.fit(
         train_dataset,
         epochs=EPOCHS,
         validation_data=val_dataset,
         callbacks=pruning_callbacks
     )
-    #分别保存最后与最好的模型
-    best_model_for_export = Midas_prune()
-    best_model_for_export.load_weights(os.path.join('result', f"{model_name}_best_weights.h5"))
-    best_pruned_model = strip_pruning(best_model_for_export)
-    best_pruned_model.save(os.path.join('result',f"{model_name}_best.h5"))
 
-    last_model_for_export = Midas_prune()
-    last_model_for_export.load_weights(os.path.join('result', f"{model_name}_last_weights.h5"))
-    last_pruned_model = strip_pruning(last_model_for_export)
-    last_pruned_model.save(os.path.join('result',f"{model_name}_last.h5"))
-
+    print("\nTraining complete. All necessary models have been saved periodically.")
 
     # --- 第八步：分析实验结果 ---
     print("Stage 6: Analyzing experimental results...")
@@ -122,5 +105,3 @@ if __name__ == '__main__':
     plt.savefig('training_analysis.png')
     print("Analysis plot saved as 'training_analysis.png'.")
     plt.show()
-
-
