@@ -3,16 +3,20 @@
 import tensorflow as tf
 import numpy as np
 import os
+os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 
+from qkeras.utils import _add_supported_quantized_objects
 # --- 关键配置 ---
-MODEL_PATH = 'result/midas_small_best.h5'
-PURE_SAMPLE_PATH = 'input/control_sample_100.npy'
+MODEL_PATH = 'saved_model/midas_small_best_v2.h5'
+PURE_SAMPLE_PATH = 'input/control_sample_2.npy'
 
 # --- 解剖主程序 ---
 if __name__ == '__main__':
     # 1. 将“尸体”搬上实验台 (加载模型)
     print(f"--- STARTING AUTOPSY ON: {MODEL_PATH} ---")
-    model = tf.keras.models.load_model(MODEL_PATH)
+    co = {}
+    _add_supported_quantized_objects(co)
+    model = tf.keras.models.load_model(MODEL_PATH,custom_objects=co)
 
     # 2. 准备“神经刺激器” (加载纯净的对照样本)
     pure_numpy_array = np.load(PURE_SAMPLE_PATH)

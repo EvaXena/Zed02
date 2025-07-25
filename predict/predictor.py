@@ -3,11 +3,16 @@ import numpy as np
 from PIL import Image
 import matplotlib.pyplot as plt
 import os
+os.environ["CUDA_VISIBLE_DEVICES"] = "1"
+#导入qkeras 来支持Q模型
 
+from qkeras.utils import _add_supported_quantized_objects
 class Predictor:
     def __init__(self,model_path,max_depth=9.99547004699707):
         print("init model")
-        self.model = tf.keras.models.load_model(model_path)
+        co = {}
+        _add_supported_quantized_objects(co)
+        self.model = tf.keras.models.load_model(model_path,custom_objects=co)
         self.input_height = 256
         self.input_width = 256
         self.max_depth = max_depth

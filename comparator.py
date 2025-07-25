@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 from matplotlib.legend import Legend
 import os
+from qkeras import QConv2D
 
 # 教程里的plotting.py不是为回归任务设计的，我们这里不再需要它
 
@@ -38,7 +39,7 @@ class Comparator:
     def _count_non_zero_weights(self, model: tf.keras.Model) -> tuple[int, int]:
         non_zero, total = 0, 0
         for layer in model.layers:
-            if isinstance(layer, (tf.keras.layers.Dense, tf.keras.layers.Conv2D)):
+            if isinstance(layer, (tf.keras.layers.Dense, tf.keras.layers.Conv2D,QConv2D)):
                 for w in layer.get_weights():
                     non_zero += tf.math.count_nonzero(w).numpy()
                     total += tf.size(w).numpy()
