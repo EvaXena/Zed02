@@ -8,3 +8,4 @@ saved_model/*
 output_qmodel/*
 q_midas_tuning
 q_midas_tuning_v3
+midas_prune_v6_epoch_200_clean.h5
