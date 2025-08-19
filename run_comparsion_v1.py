@@ -55,7 +55,7 @@ print("--- Data Preparation Complete ---\n")
 if __name__ == '__main__':
     # --- 实验配置 ---
     BASELINE_MODEL_PATH = 'saved_model/midas_small_best_v2.h5'
-    PRUNED_MODEL_PATH = 'result/q_midas_small_best.h5'
+    PRUNED_MODEL_PATH = 'saved_model/midas_prune_v6_epoch_200_clean.h5'
 
     # --- 开始审判 ---
     comparator = Comparator(

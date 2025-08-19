@@ -1,13 +1,14 @@
 # run_autopsy.py
 # 这个模型逐层输出 有学习的价值
-import tensorflow as tf
-import numpy as np
 import os
 os.environ["CUDA_VISIBLE_DEVICES"] = "1"
+import tensorflow as tf
+import numpy as np
+
 
 from qkeras.utils import _add_supported_quantized_objects
 # --- 关键配置 ---
-MODEL_PATH = 'saved_model/midas_small_best_v2.h5'
+MODEL_PATH = 'result/final_keras_decepp_v2.h5'
 PURE_SAMPLE_PATH = 'input/control_sample_2.npy'
 
 # --- 解剖主程序 ---
@@ -24,7 +25,7 @@ if __name__ == '__main__':
     # 3. 对刺激源进行标准预处理
     def preprocess_single_numpy(numpy_array):
         img = tf.convert_to_tensor(numpy_array, dtype=tf.float32)
-        img_resized = tf.image.resize(img, [256, 256])
+        img_resized = tf.image.resize(img, [512, 512])
         img_normalized = img_resized / 255.0
         return tf.expand_dims(img_normalized, axis=0)
 

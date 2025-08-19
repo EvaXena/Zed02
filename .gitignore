@@ -7,5 +7,14 @@ output/*
 saved_model/*
 output_qmodel/*
 q_midas_tuning
+q_midas_tuning_v2
 q_midas_tuning_v3
-midas_prune_v6_epoch_200_clean.h5
+decepp_test_images/*
+decepp_train_dataset/*
+Dataset_Part1.rar
+output_relu_model
+output_relu_v1_model
+output_tanh_v1_model
+output_tanh_v2_model
+output_tanh_v3_model
+output_tanhlu_v2_model

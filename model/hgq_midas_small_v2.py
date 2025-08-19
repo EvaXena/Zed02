@@ -1,6 +1,7 @@
 # hgq_midas_small.py
 
 # 将batchnorm与conv融合 节约计算成本 使用HConv2DBatchNorm
+# 为了HQG能够运行 只能对模型进行缩减 缩小通道数
 
 import tensorflow as tf
 from tensorflow import keras
@@ -101,38 +102,38 @@ def HLayer1(input_tensor, beta):
 
     x = HActivation('relu', name='layer1_relu0', beta=beta)(x)
     x = HDepthwiseSeparableConv(x, beta=beta, output_channels=24, kernel_size=3, stride=1, name_prefix='layer1_stage1_dws_0')
-    x = HInvertedResidual(x, beta=beta, output_channels=32, expansion=6, kernel_size=3, stride=2, name_prefix='layer1_stage2_ir_0')
-    x = HInvertedResidual(x, beta=beta, output_channels=32, expansion=6, kernel_size=3, stride=1, name_prefix='layer1_stage2_ir_1')
-    x = HInvertedResidual(x, beta=beta, output_channels=32, expansion=6, kernel_size=3, stride=1, name_prefix='layer1_stage2_ir_2')
+    x = HInvertedResidual(x, beta=beta, output_channels=32, expansion=2, kernel_size=3, stride=2, name_prefix='layer1_stage2_ir_0')
+    x = HInvertedResidual(x, beta=beta, output_channels=32, expansion=2, kernel_size=3, stride=1, name_prefix='layer1_stage2_ir_1')
+    x = HInvertedResidual(x, beta=beta, output_channels=32, expansion=2, kernel_size=3, stride=1, name_prefix='layer1_stage2_ir_2')
     return x
 
 def HLayer2(x, beta):
-    x = HInvertedResidual(x, beta=beta, output_channels=48, expansion=6, kernel_size=5, stride=2, name_prefix='layer2_stage0_ir_0')
-    x = HInvertedResidual(x, beta=beta, output_channels=48, expansion=6, kernel_size=5, stride=1, name_prefix='layer2_stage0_ir_1')
-    x = HInvertedResidual(x, beta=beta, output_channels=48, expansion=6, kernel_size=5, stride=1, name_prefix='layer2_stage0_ir_2')
+    x = HInvertedResidual(x, beta=beta, output_channels=48, expansion=2, kernel_size=5, stride=2, name_prefix='layer2_stage0_ir_0')
+    x = HInvertedResidual(x, beta=beta, output_channels=48, expansion=2, kernel_size=5, stride=1, name_prefix='layer2_stage0_ir_1')
+    x = HInvertedResidual(x, beta=beta, output_channels=48, expansion=2, kernel_size=5, stride=1, name_prefix='layer2_stage0_ir_2')
     return x
 
 def HLayer3(x, beta):
-    x = HInvertedResidual(x, beta=beta, output_channels=96, expansion=6, kernel_size=3, stride=2, name_prefix='layer3_stage0_ir_0')
-    x = HInvertedResidual(x, beta=beta, output_channels=96, expansion=6, kernel_size=3, stride=1, name_prefix='layer3_stage0_ir_1')
-    x = HInvertedResidual(x, beta=beta, output_channels=96, expansion=6, kernel_size=3, stride=1, name_prefix='layer3_stage0_ir_2')
-    x = HInvertedResidual(x, beta=beta, output_channels=96, expansion=6, kernel_size=3, stride=1, name_prefix='layer3_stage0_ir_3')
-    x = HInvertedResidual(x, beta=beta, output_channels=96, expansion=6, kernel_size=3, stride=1, name_prefix='layer3_stage0_ir_4')
-    x = HInvertedResidual(x, beta=beta, output_channels=136, expansion=6, kernel_size=5, stride=1, name_prefix='layer3_stage1_ir_0')
-    x = HInvertedResidual(x, beta=beta, output_channels=136, expansion=6, kernel_size=5, stride=1, name_prefix='layer3_stage1_ir_1')
-    x = HInvertedResidual(x, beta=beta, output_channels=136, expansion=6, kernel_size=5, stride=1, name_prefix='layer3_stage1_ir_2')
-    x = HInvertedResidual(x, beta=beta, output_channels=136, expansion=6, kernel_size=5, stride=1, name_prefix='layer3_stage1_ir_3')
-    x = HInvertedResidual(x, beta=beta, output_channels=136, expansion=6, kernel_size=5, stride=1, name_prefix='layer3_stage1_ir_4')
+    x = HInvertedResidual(x, beta=beta, output_channels=96, expansion=2, kernel_size=3, stride=2, name_prefix='layer3_stage0_ir_0')
+    x = HInvertedResidual(x, beta=beta, output_channels=96, expansion=2, kernel_size=3, stride=1, name_prefix='layer3_stage0_ir_1')
+    x = HInvertedResidual(x, beta=beta, output_channels=96, expansion=2, kernel_size=3, stride=1, name_prefix='layer3_stage0_ir_2')
+    x = HInvertedResidual(x, beta=beta, output_channels=96, expansion=2, kernel_size=3, stride=1, name_prefix='layer3_stage0_ir_3')
+    x = HInvertedResidual(x, beta=beta, output_channels=96, expansion=2, kernel_size=3, stride=1, name_prefix='layer3_stage0_ir_4')
+    x = HInvertedResidual(x, beta=beta, output_channels=136, expansion=2, kernel_size=5, stride=1, name_prefix='layer3_stage1_ir_0')
+    x = HInvertedResidual(x, beta=beta, output_channels=136, expansion=2, kernel_size=5, stride=1, name_prefix='layer3_stage1_ir_1')
+    x = HInvertedResidual(x, beta=beta, output_channels=136, expansion=2, kernel_size=5, stride=1, name_prefix='layer3_stage1_ir_2')
+    x = HInvertedResidual(x, beta=beta, output_channels=136, expansion=2, kernel_size=5, stride=1, name_prefix='layer3_stage1_ir_3')
+    x = HInvertedResidual(x, beta=beta, output_channels=136, expansion=2, kernel_size=5, stride=1, name_prefix='layer3_stage1_ir_4')
     return x
 
 def HLayer4(x, beta):
-    x = HInvertedResidual(x, beta=beta, output_channels=232, expansion=6, kernel_size=5, stride=2, name_prefix='layer4_stage0_ir_0')
-    x = HInvertedResidual(x, beta=beta, output_channels=232, expansion=6, kernel_size=5, stride=1, name_prefix='layer4_stage0_ir_1')
-    x = HInvertedResidual(x, beta=beta, output_channels=232, expansion=6, kernel_size=5, stride=1, name_prefix='layer4_stage0_ir_2')
-    x = HInvertedResidual(x, beta=beta, output_channels=232, expansion=6, kernel_size=5, stride=1, name_prefix='layer4_stage0_ir_3')
-    x = HInvertedResidual(x, beta=beta, output_channels=232, expansion=6, kernel_size=5, stride=1, name_prefix='layer4_stage0_ir_4')
-    x = HInvertedResidual(x, beta=beta, output_channels=232, expansion=6, kernel_size=5, stride=1, name_prefix='layer4_stage0_ir_5')
-    x = HInvertedResidual(x, beta=beta, output_channels=384, expansion=6, kernel_size=3, stride=1, name_prefix='layer4_stage1_ir_0')
+    x = HInvertedResidual(x, beta=beta, output_channels=232, expansion=2, kernel_size=5, stride=2, name_prefix='layer4_stage0_ir_0')
+    x = HInvertedResidual(x, beta=beta, output_channels=232, expansion=2, kernel_size=5, stride=1, name_prefix='layer4_stage0_ir_1')
+    x = HInvertedResidual(x, beta=beta, output_channels=232, expansion=2, kernel_size=5, stride=1, name_prefix='layer4_stage0_ir_2')
+    x = HInvertedResidual(x, beta=beta, output_channels=232, expansion=2, kernel_size=5, stride=1, name_prefix='layer4_stage0_ir_3')
+    x = HInvertedResidual(x, beta=beta, output_channels=232, expansion=2, kernel_size=5, stride=1, name_prefix='layer4_stage0_ir_4')
+    x = HInvertedResidual(x, beta=beta, output_channels=232, expansion=2, kernel_size=5, stride=1, name_prefix='layer4_stage0_ir_5')
+    x = HInvertedResidual(x, beta=beta, output_channels=384, expansion=2, kernel_size=3, stride=1, name_prefix='layer4_stage1_ir_0')
     return x
 
 def build_hgq_model(beta):

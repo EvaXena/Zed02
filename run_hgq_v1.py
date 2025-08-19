@@ -1,4 +1,4 @@
-from model.hgq_midas_small_v1 import build_hgq_model
+from model.hgq_midas_small_v2 import build_hgq_model
 from HGQ import ResetMinMax, FreeBOPs
 import tensorflow as tf
 from HGQ import trace_minmax, to_proxy_model
@@ -90,7 +90,7 @@ if __name__ == '__main__':
     # --- 开始训练！---
     # HGQ的作者建议使用大的batch_size和长的epochs，以获得稳定的结果
     EPOCHS = 200
-    BATCH_SIZE = 4096 # 或者 8192, 16384，取决于你的GPU显存
+    BATCH_SIZE = 1 # 或者 8192, 16384，取决于你的GPU显存
 
     print("--- 开始HGQ模型的训练仪式 ---")
     model.fit(

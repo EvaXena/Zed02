@@ -5,12 +5,13 @@ import matplotlib.pyplot as plt
 import os
 os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 #导入qkeras 来支持Q模型
-
+#導入Tanhlu
+from model.layers.tanhlu import Tanhlu
 from qkeras.utils import _add_supported_quantized_objects
 class Predictor:
     def __init__(self,model_path,max_depth=9.99547004699707):
         print("init model")
-        co = {}
+        co = {'Tanhlu': Tanhlu}
         _add_supported_quantized_objects(co)
         self.model = tf.keras.models.load_model(model_path,custom_objects=co)
         self.input_height = 256

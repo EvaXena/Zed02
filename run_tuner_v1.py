@@ -1,6 +1,6 @@
 import keras_tuner as kt
 import qkeras
-from model.q_midas_small_v2 import build_model
+from model.q_midas_small_v3 import build_model
 from qkeras.autoqkeras import *
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2' # 先把烦人的日志关掉
