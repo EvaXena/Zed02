@@ -18,3 +18,7 @@ output_tanh_v1_model
 output_tanh_v2_model
 output_tanh_v3_model
 output_tanhlu_v2_model
+imgs.zip
+flsea_train_dataset/*
+flsea_dataset_jpg/*
+flsea_dataset/*

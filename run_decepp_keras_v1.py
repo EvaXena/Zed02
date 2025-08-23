@@ -8,8 +8,14 @@
 
 
 
-#1e-4 全局变暗 应该缩小学习率 避免噪声影响
-#1e-5 正在尝试 G通道全部归零 这扯不扯
+#1e-4 全局变暗 应该缩小学习率 避免噪声影响 batchsize =  8
+#1e-5 正在尝试 G通道全部归零 这扯不扯 batchsize =  8
+#增大学习率为1e-4 batch_size扩大到64
+#v2 全绿
+#v3 修改l_col 依旧GB为1 R近0
+#V4 加大l_col的权重 改为5 大部分黑色 其他红蓝绿
+#v5 1e-4学习率 batchsize=8 尝试重现v1结果 命名为V4
+#v6 使用flsea图像进行训练
 # --- 修改: 清理 imports ---
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
@@ -35,20 +41,20 @@ def load_and_preprocess_image(path):
 
 if __name__ == '__main__':
     # --- 超参数和路径配置 ---
-    LR = 1e-5
+    LR = 1e-4
     EPOCHS = 800
     BATCH_SIZE = 8 # 64 可能会导致显存不足，8 是一个更安全的值
     VAL_SPLIT = 0.15
-    DATA_DIR = '/data2/home/clp/Documents/0709_Zed02/0709_Zed02_finished/Zed02/decepp_train_dataset'
-    
+    DATA_DIR = '/data2/home/clp/Documents/0709_Zed02/0709_Zed02_finished/Zed02/flsea_dataset_jpg'
+    patience = 200
     # --- 修改: 更新输出路径并移除 beta ---
     os.makedirs('result', exist_ok=True)
-    best_weights_path = 'result/best_keras_decepp_v2_weights.h5'
-    final_model_path = "result/final_keras_decepp_v2.h5"
+    best_weights_path = 'result/best_keras_decepp_v6_weights.h5'
+    final_model_path = "result/final_keras_decepp_v6.h5"
 
     # --- 数据加载和处理 (保持不变) ---
     print('Stage 1: Loading dataset paths')
-    patterns = [os.path.join(DATA_DIR, '**/*.jpg'), os.path.join(DATA_DIR, '**/*.JPG')]
+    patterns = [os.path.join(DATA_DIR, '**/*.jpg'), os.path.join(DATA_DIR, '**/*.JPG'),os.path.join(DATA_DIR,'**/*.tiff')]
     all_file_paths = []
     # 使用 glob, 因为我们之前确认它比 list_files 在您的环境中更可靠
     import glob 
@@ -77,7 +83,7 @@ if __name__ == '__main__':
     model.summary()
 
     # --- 修改: 移除 HGQ Callbacks ---
-    patience = 100
+    
     # callbacks = [ResetMinMax(), FreeBOPs()] # 已移除
     # for cb in callbacks: # 已移除
     #     cb.set_model(model) # 已移除
@@ -116,6 +122,8 @@ if __name__ == '__main__':
             best_val_loss = val_loss
             wait_epochs = 0
             model.save_weights(best_weights_path)
+            model.compile()
+            model.save(final_model_path)
             print(f"  Validation loss improved. Saving best weights to {best_weights_path}")
         else:
             wait_epochs += 1

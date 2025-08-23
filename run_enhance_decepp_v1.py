@@ -18,7 +18,7 @@ from model.zero_decepp_v1 import *
 # ==============================================================================
 
 # 模型权重文件的路径
-MODEL_WEIGHTS_PATH = 'result/best_keras_decepp_v2_weights.h5'
+MODEL_WEIGHTS_PATH = 'result/best_keras_decepp_v4_weights.h5'
 
 # 您想要测试的输入图片的路径
 INPUT_IMAGE_PATH = 'decepp_test_images/low_light_image.jpg' # TODO: 替换为您自己的图片路径

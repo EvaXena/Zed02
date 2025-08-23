@@ -7,7 +7,8 @@
 
 #cat使用layers层
 #插值使用最临近
-
+#分开concat层 避免dataflow难以识别
+#损失函数疑似有误 进行确认 修改了W_col 修改了l_col
 import tensorflow as tf 
 from tensorflow import keras
 from keras import layers
@@ -64,22 +65,25 @@ def Model(input_shape=(600, 600, 3), scale_factor=12, number_f=32):
     # 移除了第一个 HActivation 适配器
 
     #将所有操作都使用layers来进行
-    concat_layer = layers.Concatenate(axis=-1)
+    concat_layer1 = layers.Concatenate(name='Concat_1',axis=-1)
+    concat_layer2 = layers.Concatenate(name='Concat_2',axis=-1)
+    concat_layer3 = layers.Concatenate(name='Concat_3',axis=-1)
+
 
     x1 = dsc_block(x, number_f, name_prefix='x1')
     x2 = dsc_block(x1, number_f, name_prefix='x2')
     x3 = dsc_block(x2, number_f, name_prefix='x3')
     x4 = dsc_block(x3, number_f, name_prefix='x4')
 
-    concat_1 = concat_layer([x3,x4])
+    concat_1 = concat_layer1([x3,x4])
     # 移除了 HActivation 适配器，直接连接
     x5 = dsc_block(concat_1, number_f, name_prefix='x5')
 
-    concat_2 = concat_layer([x2,x5])
+    concat_2 = concat_layer2([x2,x5])
     # 移除了 HActivation 适配器
     x6 = dsc_block(concat_2, number_f, name_prefix='x6')
 
-    concat_3 = concat_layer([x1,x6])
+    concat_3 = concat_layer3([x1,x6])
     # 移除了 HActivation 适配器
     x7 = dsc_block_tanh(concat_3, 3, name_prefix='x7')
 
@@ -103,12 +107,21 @@ def loss_exp(enhanced_image, E=0.6, patch_size=16):
     d = tf.abs(avg_luminance - E)
     return tf.reduce_mean(d)
 
+#修改为单张图片计算损失
 def loss_col(enhanced_image):
-    mean_r, mean_g, mean_b = [tf.reduce_mean(enhanced_image[:, :, :, i]) for i in range(3)]
+    mean_rgb = tf.reduce_mean(enhanced_image,axis = [1,2],keepdims=False)
+
+    mean_r = mean_rgb[:,0]
+    mean_g = mean_rgb[:,1]
+    mean_b = mean_rgb[:,2]
+
     d_rg = tf.square(mean_r - mean_g)
     d_rb = tf.square(mean_r - mean_b)
     d_gb = tf.square(mean_g - mean_b)
-    return d_rg + d_rb + d_gb
+
+    per_image_loss = d_rg + d_rb + d_gb
+
+    return tf.reduce_mean(per_image_loss)
 
 def loss_tvA(curve_map):
     return tf.reduce_mean(tf.image.total_variation(curve_map))

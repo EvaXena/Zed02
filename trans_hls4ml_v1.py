@@ -6,7 +6,7 @@ os.environ['PATH'] = os.environ['XILINX_VITIS'] + '/bin:' + os.environ['PATH']
  
 from tensorflow.keras.models import load_model
 
-model = load_model('midas_prune_v6_epoch_200_clean.h5')
+model = load_model('final_keras_decepp_v2.h5')
 config = hls4ml.utils.config_from_keras_model(model,granularity='model',backend='Vitis')
 config['Model']['ReuseFactor'] = 8192
 config['Model']['Strategy'] = 'Resource'
@@ -19,4 +19,4 @@ hls_model = hls4ml.converters.convert_from_keras_model(
 )
 
 hls4ml.utils.plot_model(hls_model, show_shapes=True, show_precision=True, to_file='model1.svg')
-hls_model.compile()
+hls_model.compile(csim=False,synth=True)
