@@ -15,11 +15,14 @@
 #v3 修改l_col 依旧GB为1 R近0
 #V4 加大l_col的权重 改为5 大部分黑色 其他红蓝绿
 #v5 1e-4学习率 batchsize=8 尝试重现v1结果 命名为V4
-#v6 使用flsea图像进行训练
+#v6 使用flsea图像进行训练 全红
+#v7 大学习率1e-4 大batch_size 64 使用flsea训练 偏蓝 似乎可以
+#v8 小学习率1e-4 小batch_size 8 使用flsea训练 全黑
+#v9 小学习率1e-5 小batch 8 flsea  
 # --- 修改: 清理 imports ---
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
-os.environ["CUDA_VISIBLE_DEVICES"] = "0" # 确保这是脚本最先执行的几行代码之一
+os.environ["CUDA_VISIBLE_DEVICES"] = "1" # 确保这是脚本最先执行的几行代码之一
 
 import numpy as np
 import tensorflow as tf
@@ -41,7 +44,7 @@ def load_and_preprocess_image(path):
 
 if __name__ == '__main__':
     # --- 超参数和路径配置 ---
-    LR = 1e-4
+    LR = 1e-5
     EPOCHS = 800
     BATCH_SIZE = 8 # 64 可能会导致显存不足，8 是一个更安全的值
     VAL_SPLIT = 0.15
@@ -49,8 +52,8 @@ if __name__ == '__main__':
     patience = 200
     # --- 修改: 更新输出路径并移除 beta ---
     os.makedirs('result', exist_ok=True)
-    best_weights_path = 'result/best_keras_decepp_v6_weights.h5'
-    final_model_path = "result/final_keras_decepp_v6.h5"
+    best_weights_path = 'result/best_keras_decepp_v8_weights.h5'
+    final_model_path = "result/final_keras_decepp_v8.h5"
 
     # --- 数据加载和处理 (保持不变) ---
     print('Stage 1: Loading dataset paths')
