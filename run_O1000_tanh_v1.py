@@ -66,7 +66,7 @@ if __name__ == '__main__':
 
     print("stage 4")
     checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
-        filepath='result/O1000_tanh_v1_best.h5', # 保存文件的路径
+        filepath='result/O1000_tanh_vtt2_best.h5', # 保存文件的路径
         save_best_only=True,             # 只保存最好的，不保存最后的
         monitor='val_loss',              # 监控验证集的损失值
         mode='min',                      # 我们希望损失值越小越好

@@ -9,6 +9,7 @@
 #插值使用最临近
 #分开concat层 避免dataflow难以识别
 #损失函数疑似有误 进行确认 修改了W_col 修改了l_col
+#减少一半filter 用于缩减网络尺寸
 import tensorflow as tf 
 from tensorflow import keras
 from keras import layers
@@ -55,7 +56,7 @@ def enhance(raw_image, curve_tensor):
     return enhanced_image
 
 # --- 标准 Keras 模型定义 ---
-def Model(input_shape=(600, 600, 3), scale_factor=12, number_f=32):
+def Model(input_shape=(600, 600, 3), scale_factor=12, number_f=16):
     # beta 参数已移除
     model_input = keras.Input(shape=input_shape)
     
@@ -65,6 +66,9 @@ def Model(input_shape=(600, 600, 3), scale_factor=12, number_f=32):
     # 移除了第一个 HActivation 适配器
 
     #将所有操作都使用layers来进行
+    concat_layer1 = layers.Concatenate(name='Concat_1',axis=-1)
+    concat_layer2 = layers.Concatenate(name='Concat_2',axis=-1)
+    concat_layer3 = layers.Concatenate(name='Concat_3',axis=-1)
 
 
     x1 = dsc_block(x, number_f, name_prefix='x1')
@@ -72,7 +76,21 @@ def Model(input_shape=(600, 600, 3), scale_factor=12, number_f=32):
     x3 = dsc_block(x2, number_f, name_prefix='x3')
     x4 = dsc_block(x3, number_f, name_prefix='x4')
 
-    model = keras.Model(inputs=model_input, outputs=[x1,x2,x3,x4], name='Keras_DCE_Net_p1')
+    concat_1 = concat_layer1([x3,x4])
+    # 移除了 HActivation 适配器，直接连接
+    x5 = dsc_block(concat_1, number_f, name_prefix='x5')
+
+    concat_2 = concat_layer2([x2,x5])
+    # 移除了 HActivation 适配器
+    x6 = dsc_block(concat_2, number_f, name_prefix='x6')
+
+    concat_3 = concat_layer3([x1,x6])
+    # 移除了 HActivation 适配器
+    x7 = dsc_block_tanh(concat_3, 3, name_prefix='x7')
+
+    x_r = layers.UpSampling2D(size=(scale_factor, scale_factor), interpolation='nearest', name='upsample_x_r')(x7)
+
+    model = keras.Model(inputs=model_input, outputs=x_r, name='Keras_DCE_Net')
     return model
 
 # --- 损失函数 (保持不变, 它们与模型层类型无关) ---
